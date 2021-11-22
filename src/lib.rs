@@ -106,7 +106,7 @@ impl<'a, T> Uri<'a, T> {
     }
 }
 
-/// Abstrated stringly parameter in the URI.
+/// Abstracted stringly parameter in the URI.
 ///
 /// This type abstracts the parameter that may be encoded allowing lazy decoding, possibly even
 /// without allocation.
