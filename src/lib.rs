@@ -354,6 +354,7 @@ mod tests {
         assert_eq!(uri.to_string(), input);
     }
 
+    #[allow(clippy::inconsistent_digit_grouping)] // Use sats/bitcoin when grouping.
     #[test]
     fn request_20_point_30_btc_to_luke_dash_jr() {
         // See https://github.com/rust-bitcoin/rust-bitcoin/issues/709
@@ -369,6 +370,7 @@ mod tests {
         assert_eq!(uri.to_string(), input);
     }
 
+    #[allow(clippy::inconsistent_digit_grouping)] // Use sats/bitcoin when grouping.
     #[test]
     fn request_50_btc_with_message() {
         // See https://github.com/rust-bitcoin/rust-bitcoin/issues/709
