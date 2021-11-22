@@ -1,0 +1,26 @@
+[package]
+name = "bip21"
+version = "0.1.0"
+authors = ["Martin Habovstiak <martin.habovstiak@gmail.com>"]
+edition = "2018"
+description = "Rust-idiomatic, compliant, flexible and performant BIP21 crate."
+repository = "https://github.com/Kixunil/bip21"
+readme = "README.md"
+keywords = ["bitcoin", "bip21", "parsing", "newtypes"]
+categories = ["cryptography::cryptocurrencies", "encoding", "rust-patterns", "value-formatting"]
+license = "MITNFA"
+
+[package.metadata.docs.rs]
+features = ["std", "non-compliant-bytes"]
+rustc-args = ["--cfg", "docsrs"]
+
+[features]
+# Implements std::error::Error for error types
+std = ["percent-encoding-rfc3986/std"]
+# Enables non-BIP21-compliant feature of using raw bytes instead of validated UTF-8 strings.
+non-compliant-bytes = ["either"]
+
+[dependencies]
+either = { version = "1.6.1", optional = true }
+percent-encoding-rfc3986 = "0.1.3"
+bitcoin = "0.27.1"
