@@ -1,6 +1,6 @@
 [package]
 name = "bip21"
-version = "0.1.0"
+version = "0.1.1"
 authors = ["Martin Habovstiak <martin.habovstiak@gmail.com>"]
 edition = "2018"
 description = "Rust-idiomatic, compliant, flexible and performant BIP21 crate."

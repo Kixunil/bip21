@@ -21,6 +21,10 @@
 //!
 //! * `std` enables integration with `std` - mainly `std::error::Error`.
 //! * `non-compliant-bytes` - enables use of non-compliant API that can parse non-UTF-8 URI values.
+//!
+//! ## MSRV
+//!
+//! 1.41.1
 
 #![cfg_attr(docsrs, feature(doc_cfg))]
 #![no_std]
