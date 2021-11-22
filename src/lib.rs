@@ -271,7 +271,7 @@ type ParamIterInner<'a, T> = either::Either<PercentDecode<'a>, T>;
 /// Empty extras.
 ///
 /// This type can be used if extras are not required.
-/// It is also the default type parameter of [`Uri`]
+/// It is also the default type parameter of [`Uri`].
 #[derive(Debug, Default, Copy, Clone, Eq, PartialEq, Ord, PartialOrd, Hash)]
 pub struct NoExtras;
 
