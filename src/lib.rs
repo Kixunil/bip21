@@ -106,7 +106,7 @@ impl<'a, T> Uri<'a, T> {
     }
 }
 
-/// Abstrated stringly parameter in the URI.
+/// Abstracted stringly parameter in the URI.
 ///
 /// This type abstracts the parameter that may be encoded allowing lazy decoding, possibly even
 /// without allocation.
@@ -271,7 +271,7 @@ type ParamIterInner<'a, T> = either::Either<PercentDecode<'a>, T>;
 /// Empty extras.
 ///
 /// This type can be used if extras are not required.
-/// It is also the default type parameter of [`Uri`]
+/// It is also the default type parameter of [`Uri`].
 #[derive(Debug, Default, Copy, Clone, Eq, PartialEq, Ord, PartialOrd, Hash)]
 pub struct NoExtras;
 
@@ -354,6 +354,7 @@ mod tests {
         assert_eq!(uri.to_string(), input);
     }
 
+    #[allow(clippy::inconsistent_digit_grouping)] // Use sats/bitcoin when grouping.
     #[test]
     fn request_20_point_30_btc_to_luke_dash_jr() {
         // See https://github.com/rust-bitcoin/rust-bitcoin/issues/709
@@ -369,6 +370,7 @@ mod tests {
         assert_eq!(uri.to_string(), input);
     }
 
+    #[allow(clippy::inconsistent_digit_grouping)] // Use sats/bitcoin when grouping.
     #[test]
     fn request_50_btc_with_message() {
         // See https://github.com/rust-bitcoin/rust-bitcoin/issues/709

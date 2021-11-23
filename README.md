@@ -10,7 +10,7 @@ early-development!
 * Rust-idiomatic: uses strong types, standard traits and other things
 * Compliant: implements all requirements of BIP21, including protections to not forget about
              `req-`. (But see features.)
-* Flexible: enables parsing/serializing additional arguments not defined by BIP21
+* Flexible: enables parsing/serializing additional arguments not defined by BIP21.
 * Performant: uses zero-copy deserialization and lazy evaluation wherever possible.
 
 Serialization and deserialization is inspired by `serde` with these important differences:
