@@ -1,6 +1,6 @@
 [package]
 name = "bip21"
-version = "0.1.1"
+version = "0.1.2"
 authors = ["Martin Habovstiak <martin.habovstiak@gmail.com>"]
 edition = "2018"
 description = "Rust-idiomatic, compliant, flexible and performant BIP21 crate."
@@ -12,7 +12,7 @@ license = "MITNFA"
 
 [package.metadata.docs.rs]
 features = ["std", "non-compliant-bytes"]
-rustc-args = ["--cfg", "docsrs"]
+rustdoc-args = ["--cfg", "docsrs"]
 
 [features]
 # Implements std::error::Error for error types
