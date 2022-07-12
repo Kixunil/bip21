@@ -57,6 +57,7 @@ pub use ser::{SerializeParams};
 /// This struct represents all fields of BIP21 URI with the ability to add more extra fields using
 /// the `extras` field. By default there are no extra fields so an empty implementation is used.
 #[non_exhaustive]
+#[derive(Debug)]
 pub struct Uri<'a, Extras = NoExtras> {
     /// The address provided in the URI.
     ///
@@ -112,7 +113,7 @@ impl<'a, T> Uri<'a, T> {
 /// without allocation.
 /// When constructing [`Uri`] to be displayed you may use `From<S>` where `S` is one of various
 /// stringly types. The conversion is always cheap.
-#[derive(Clone)]
+#[derive(Debug, Clone)]
 pub struct Param<'a>(ParamInner<'a>);
 
 impl<'a> Param<'a> {
@@ -244,7 +245,7 @@ impl<'a> TryFrom<Param<'a>> for Cow<'a, str> {
     }
 }
 
-#[derive(Clone)]
+#[derive(Debug, Clone)]
 enum ParamInner<'a> {
     EncodedBorrowed(PercentDecode<'a>),
     UnencodedBytes(Cow<'a, [u8]>),
