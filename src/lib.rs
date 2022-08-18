@@ -358,9 +358,7 @@ mod tests {
     #[allow(clippy::inconsistent_digit_grouping)] // Use sats/bitcoin when grouping.
     #[test]
     fn request_20_point_30_btc_to_luke_dash_jr() {
-        // See https://github.com/rust-bitcoin/rust-bitcoin/issues/709
-        // let input = "bitcoin:1andreas3batLhQa2FawWjeyjCqyBzypd?amount=20.3&label=Luke-Jr";
-        let input = "bitcoin:1andreas3batLhQa2FawWjeyjCqyBzypd?amount=20.30000000&label=Luke-Jr";
+        let input = "bitcoin:1andreas3batLhQa2FawWjeyjCqyBzypd?amount=20.3&label=Luke-Jr";
         let uri = input.parse::<Uri<'_>>().unwrap();
         let label: Cow<'_, str> = uri.label.clone().unwrap().try_into().unwrap();
         assert_eq!(uri.address.to_string(), "1andreas3batLhQa2FawWjeyjCqyBzypd");
@@ -374,9 +372,7 @@ mod tests {
     #[allow(clippy::inconsistent_digit_grouping)] // Use sats/bitcoin when grouping.
     #[test]
     fn request_50_btc_with_message() {
-        // See https://github.com/rust-bitcoin/rust-bitcoin/issues/709
-        // let input = "bitcoin:1andreas3batLhQa2FawWjeyjCqyBzypd?amount=50&label=Luke-Jr&message=Donation%20for%20project%20xyz";
-        let input = "bitcoin:1andreas3batLhQa2FawWjeyjCqyBzypd?amount=50.00000000&label=Luke-Jr&message=Donation%20for%20project%20xyz";
+        let input = "bitcoin:1andreas3batLhQa2FawWjeyjCqyBzypd?amount=50&label=Luke-Jr&message=Donation%20for%20project%20xyz";
         let uri = input.parse::<Uri<'_>>().unwrap();
         let label: Cow<'_, str> = uri.label.clone().unwrap().try_into().unwrap();
         let message: Cow<'_, str> = uri.message.clone().unwrap().try_into().unwrap();
