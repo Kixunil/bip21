@@ -14,6 +14,7 @@ use bitcoin::util::amount::{Denomination, ParseAmountError};
 use bitcoin::util::address::Error as AddressError;
 use core::fmt;
 use super::{Uri, Param};
+use percent_encoding_rfc3986::PercentDecodeError;
 
 impl<'a, T> Uri<'a, T> {
     /// Implements deserialization.
@@ -34,7 +35,7 @@ impl<'a, T> Uri<'a, T> {
             None => (string, None),
         };
 
-        let address = address.parse().map_err(|error| Error::Uri(UriError(UriErrorInner::Address(error))))?;
+        let address = address.parse().map_err(Error::uri)?;
         let mut deserializer = T::DeserializationState::default();
         let mut amount = None;
         let mut label = None;
@@ -49,22 +50,19 @@ impl<'a, T> Uri<'a, T> {
                 match key {
                     "amount" => {
                         let parsed_amount = bitcoin::Amount::from_str_in(value, Denomination::Bitcoin)
-                            .map_err(|error| Error::Uri(UriError(UriErrorInner::Amount(error))))?;
+                            .map_err(Error::uri)?;
                         amount = Some(parsed_amount);
                     },
                     "label" => {
-                        let label_decoder = Param::decode(value)
-                            .map_err(|error| Error::Uri(UriError(UriErrorInner::PercentDecode { parameter: key.to_owned(), error, })))?;
+                        let label_decoder = Param::decode(value).map_err(Error::percent_decode_static("label"))?;
                         label = Some(label_decoder);
                     },
                     "message" => {
-                        let message_decoder = Param::decode(value)
-                            .map_err(|error| Error::Uri(UriError(UriErrorInner::PercentDecode { parameter: key.to_owned(), error, })))?;
+                        let message_decoder = Param::decode(value).map_err(Error::percent_decode_static("message"))?;
                         message = Some(message_decoder);
                     },
                     extra_key => {
-                        let decoder = Param::decode(value)
-                            .map_err(|error| Error::Uri(UriError(UriErrorInner::PercentDecode { parameter: key.to_owned(), error, })))?;
+                        let decoder = Param::decode(value).map_err(Error::percent_decode(key))?;
                         let is_known = deserializer.deserialize_borrowed(extra_key, decoder).map_err(Error::Extras)?;
                         if is_known == ParamKind::Unknown && extra_key.starts_with("req-") {
                             return Err(Error::Uri(UriError(UriErrorInner::UnknownRequiredParameter(extra_key.to_owned()))));
@@ -176,6 +174,24 @@ pub enum Error<T> {
     Extras(T),
 }
 
+impl<T> Error<T> {
+    fn uri<U: Into<UriErrorInner>>(error: U) -> Self {
+        Error::Uri(UriError(error.into()))
+    }
+
+    fn percent_decode_static(parameter: &'static str) -> impl FnOnce(PercentDecodeError) -> Self {
+        move |error| {
+            Self::uri(UriErrorInner::PercentDecode { parameter: Cow::Borrowed(parameter), error })
+        }
+    }
+
+    fn percent_decode(parameter: &str) -> impl '_ + FnOnce(PercentDecodeError) -> Self {
+        move |error| {
+            Self::uri(UriErrorInner::PercentDecode { parameter: parameter.to_owned().into(), error })
+        }
+    }
+}
+
 impl<T: fmt::Display> fmt::Display for Error<T> {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match self {
@@ -207,8 +223,20 @@ enum UriErrorInner {
     Address(AddressError),
     Amount(ParseAmountError),
     UnknownRequiredParameter(String),
-    PercentDecode { parameter: String, error: percent_encoding_rfc3986::PercentDecodeError, },
+    PercentDecode { parameter: Cow<'static, str>, error: PercentDecodeError, },
     MissingEquals(String),
+}
+
+impl From<AddressError> for UriErrorInner {
+    fn from(value: AddressError) -> Self {
+        UriErrorInner::Address(value)
+    }
+}
+
+impl From<ParseAmountError> for UriErrorInner {
+    fn from(value: ParseAmountError) -> Self {
+        UriErrorInner::Amount(value)
+    }
 }
 
 impl fmt::Display for UriError {
