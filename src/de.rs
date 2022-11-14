@@ -219,7 +219,10 @@ impl fmt::Display for UriError {
             UriErrorInner::Address(_) => write!(f, "the address is invalid"),
             UriErrorInner::Amount(_) => write!(f, "the amount is invalid"),
             UriErrorInner::UnknownRequiredParameter(parameter) => write!(f, "the URI contains unknown required parameter '{}'", parameter),
+            #[cfg(feature = "std")]
             UriErrorInner::PercentDecode { parameter, error: _, } => write!(f, "can not percent-decode parameter {}", parameter),
+            #[cfg(not(feature = "std"))]
+            UriErrorInner::PercentDecode { parameter, error, } => write!(f, "can not percent-decode parameter {}: {}", parameter, error),
             UriErrorInner::MissingEquals(parameter) => write!(f, "the parameter '{}' is missing a value", parameter),
         }
     }
@@ -273,7 +276,7 @@ impl<'a, T> TryFrom<Cow<'a, str>> for Uri<'a, T> where T: for<'de> DeserializePa
 
     fn try_from(s: Cow<'a, str>) -> Result<Self, Self::Error> {
         match s {
-            Cow::Borrowed(s) => (&*s).try_into(),
+            Cow::Borrowed(s) => s.try_into(),
             Cow::Owned(s) => s.parse(),
         }
     }
