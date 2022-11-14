@@ -21,7 +21,7 @@ pub trait SerializeParams {
     type Value: fmt::Display;
 
     /// Iterator over key-value pairs
-    type Iterator: Iterator<Item=(Self::Key, Self::Value)>;
+    type Iterator: Iterator<Item = (Self::Key, Self::Value)>;
 
     /// Constructs the iterator over key-value pairs.
     fn serialize_params(self) -> Self::Iterator;
@@ -119,6 +119,7 @@ fn maybe_display_param(writer: &mut impl fmt::Write, key: impl fmt::Display, val
     }
 }
 
+#[rustfmt::skip]
 impl<'a, T> fmt::Display for Uri<'a, T> where for<'b> &'b T: SerializeParams {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         if f.alternate() {
@@ -139,4 +140,3 @@ impl<'a, T> fmt::Display for Uri<'a, T> where for<'b> &'b T: SerializeParams {
         Ok(())
     }
 }
-

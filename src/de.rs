@@ -49,8 +49,7 @@ impl<'a, T: DeserializeParams<'a>> Uri<'a, T> {
                 let value = &param[(pos + 1)..];
                 match key {
                     "amount" => {
-                        let parsed_amount = bitcoin::Amount::from_str_in(value, Denomination::Bitcoin)
-                            .map_err(Error::uri)?;
+                        let parsed_amount = bitcoin::Amount::from_str_in(value, Denomination::Bitcoin).map_err(Error::uri)?;
                         amount = Some(parsed_amount);
                     },
                     "label" => {
@@ -160,7 +159,7 @@ pub trait DeserializationState<'de>: Default {
 /// deserialization.
 pub trait DeserializeParams<'de>: Sized + DeserializationError {
     /// State used when deserializing.
-    type DeserializationState: DeserializationState<'de, Value=Self>;
+    type DeserializationState: DeserializationState<'de, Value = Self>;
 }
 
 /// Error returned when parsing URI.
@@ -183,13 +182,19 @@ impl<T> Error<T> {
 
     fn percent_decode_static(parameter: &'static str) -> impl FnOnce(PercentDecodeError) -> Self {
         move |error| {
-            Self::uri(UriErrorInner::PercentDecode { parameter: Cow::Borrowed(parameter), error })
+            Self::uri(UriErrorInner::PercentDecode {
+                parameter: Cow::Borrowed(parameter),
+                error,
+            })
         }
     }
 
     fn percent_decode(parameter: &str) -> impl '_ + FnOnce(PercentDecodeError) -> Self {
         move |error| {
-            Self::uri(UriErrorInner::PercentDecode { parameter: parameter.to_owned().into(), error })
+            Self::uri(UriErrorInner::PercentDecode {
+                parameter: parameter.to_owned().into(),
+                error,
+            })
         }
     }
 }
@@ -202,7 +207,6 @@ impl<T: fmt::Display> fmt::Display for Error<T> {
         }
     }
 }
-
 
 #[cfg(feature = "std")]
 impl<T: fmt::Display + std::error::Error + 'static> std::error::Error for Error<T> {
@@ -225,7 +229,10 @@ enum UriErrorInner {
     Address(AddressError),
     Amount(ParseAmountError),
     UnknownRequiredParameter(String),
-    PercentDecode { parameter: Cow<'static, str>, error: PercentDecodeError, },
+    PercentDecode {
+        parameter: Cow<'static, str>,
+        error: PercentDecodeError,
+    },
     MissingEquals(String),
 }
 
@@ -250,9 +257,9 @@ impl fmt::Display for UriError {
             UriErrorInner::Amount(_) => write!(f, "the amount is invalid"),
             UriErrorInner::UnknownRequiredParameter(parameter) => write!(f, "the URI contains unknown required parameter '{}'", parameter),
             #[cfg(feature = "std")]
-            UriErrorInner::PercentDecode { parameter, error: _, } => write!(f, "can not percent-decode parameter {}", parameter),
+            UriErrorInner::PercentDecode { parameter, error: _ } => write!(f, "can not percent-decode parameter {}", parameter),
             #[cfg(not(feature = "std"))]
-            UriErrorInner::PercentDecode { parameter, error, } => write!(f, "can not percent-decode parameter {}: {}", parameter, error),
+            UriErrorInner::PercentDecode { parameter, error } => write!(f, "can not percent-decode parameter {}: {}", parameter, error),
             UriErrorInner::MissingEquals(parameter) => write!(f, "the parameter '{}' is missing a value", parameter),
         }
     }
@@ -268,7 +275,7 @@ impl std::error::Error for UriError {
             UriErrorInner::Address(error) => Some(error),
             UriErrorInner::Amount(error) => Some(error),
             UriErrorInner::UnknownRequiredParameter(_) => None,
-            UriErrorInner::PercentDecode { parameter: _, error, } => Some(error),
+            UriErrorInner::PercentDecode { parameter: _, error } => Some(error),
             UriErrorInner::MissingEquals(_) => None,
         }
     }
@@ -311,4 +318,3 @@ impl<'a, T: for<'de> DeserializeParams<'de>> TryFrom<Cow<'a, str>> for Uri<'a, T
         }
     }
 }
-
