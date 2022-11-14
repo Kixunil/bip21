@@ -78,7 +78,10 @@ impl<'a> fmt::Display for DisplayParam<'a> {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match &(self.0).0 {
             // TODO: improve percent_encoding_rfc_3986 so that allocation can be avoided
-            ParamInner::EncodedBorrowed(decoder) => write!(f, "{}", percent_encoding_rfc3986::percent_encode(&<Cow<'_, [u8]>>::from(decoder.clone()), &ASCII_SET)),
+            ParamInner::EncodedBorrowed(decoder) => {
+                let decoded = <Cow<'_, [u8]>>::from(decoder.clone());
+                write!(f, "{}", percent_encoding_rfc3986::percent_encode(&decoded, &ASCII_SET))
+            },
             ParamInner::UnencodedBytes(bytes) => write!(f, "{}", percent_encoding_rfc3986::percent_encode(bytes, &ASCII_SET)),
             ParamInner::UnencodedString(string) => write!(f, "{}", percent_encoding_rfc3986::utf8_percent_encode(string, &ASCII_SET)),
         }
