@@ -124,8 +124,9 @@ impl<'a, T> fmt::Display for Uri<'a, T> where for<'b> &'b T: SerializeParams {
             write!(f, "bitcoin:{}", self.address)?;
         }
         let mut no_params = true;
+        let display_amount = self.amount.as_ref().map(|amount| amount.display_in(Denomination::Bitcoin));
 
-        maybe_display_param(f, "amount", self.amount.as_ref().map(|amount| amount.to_string_in(Denomination::Bitcoin)), &mut no_params)?;
+        maybe_display_param(f, "amount", display_amount, &mut no_params)?;
         maybe_write_param(f, "label", self.label.as_ref(), &mut no_params)?;
         maybe_write_param(f, "message", self.message.as_ref(), &mut no_params)?;
 
