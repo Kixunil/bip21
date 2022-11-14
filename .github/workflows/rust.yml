@@ -3,37 +3,37 @@ name: build
 on: push
 
 jobs:
-  codestyle:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Set up Rust
-        uses: hecrj/setup-rust-action@v1
-        with:
-          components: rustfmt
-          rust-version: stable
-      - uses: actions/checkout@v2
-      - run: cargo fmt --all -- --check
+  # codestyle:
+  #   runs-on: ubuntu-latest
+  #   steps:
+  #     - name: Set up Rust
+  #       uses: hecrj/setup-rust-action@v1
+  #       with:
+  #         components: rustfmt
+  #         rust-version: stable
+  #     - uses: actions/checkout@v2
+  #     - run: cargo fmt --all -- --check
 
-  lint:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Set up Rust
-        uses: hecrj/setup-rust-action@v1
-        with:
-          components: clippy
-      - uses: actions/checkout@v2
-      - run: cargo clippy --all-targets --all-features -- -D clippy::all
+  # lint:
+  #   runs-on: ubuntu-latest
+  #   steps:
+  #     - name: Set up Rust
+  #       uses: hecrj/setup-rust-action@v1
+  #       with:
+  #         components: clippy
+  #     - uses: actions/checkout@v2
+  #     - run: cargo clippy --all-targets --all-features -- -D clippy::all
 
-  compile:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Set up Rust
-        uses: hecrj/setup-rust-action@v1
-      - uses: actions/checkout@v2
-      - run: cargo check --all
+  # compile:
+  #   runs-on: ubuntu-latest
+  #   steps:
+  #     - name: Set up Rust
+  #       uses: hecrj/setup-rust-action@v1
+  #     - uses: actions/checkout@v2
+  #     - run: cargo check --all
 
   test:
-    needs: [codestyle, lint, compile]
+    # needs: [codestyle, lint, compile]
     strategy:
       matrix:
         os: [ubuntu-latest, windows-latest, macOS-latest]
