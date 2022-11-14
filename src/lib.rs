@@ -77,12 +77,12 @@ pub struct Uri<'a, Extras = NoExtras> {
     pub extras: Extras,
 }
 
-impl<'a, T> Uri<'a, T> {
+impl<'a, T: Default> Uri<'a, T> {
     /// Creates an URI with defaults.
     ///
     /// This sets all fields except `address` to default values.
     /// They can be overwritten in subsequent assignments before displaying the URI.
-    pub fn new(address: bitcoin::Address) -> Self where T: Default {
+    pub fn new(address: bitcoin::Address) -> Self {
         Uri {
             address,
             amount: None,
@@ -91,7 +91,9 @@ impl<'a, T> Uri<'a, T> {
             extras: Default::default(),
         }
     }
+}
 
+impl<'a, T> Uri<'a, T> {
     /// Creates an URI with defaults.
     ///
     /// This sets all fields except `address` and `extras` to default values.

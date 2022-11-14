@@ -16,9 +16,9 @@ use core::fmt;
 use super::{Uri, Param};
 use percent_encoding_rfc3986::PercentDecodeError;
 
-impl<'a, T> Uri<'a, T> {
+impl<'a, T: DeserializeParams<'a>> Uri<'a, T> {
     /// Implements deserialization.
-    fn deserialize_raw(string: &'a str) -> Result<Self, Error<T::Error>> where T: DeserializeParams<'a> {
+    fn deserialize_raw(string: &'a str) -> Result<Self, Error<T::Error>> {
         const SCHEME: &str = "bitcoin:";
         if string.len() < SCHEME.len() {
             return Err(Error::Uri(UriError(UriErrorInner::TooShort)));
@@ -81,7 +81,9 @@ impl<'a, T> Uri<'a, T> {
             extras,
         })
     }
+}
 
+impl<'a, T> Uri<'a, T> {
     /// Makes the lifetime `'static` by converting all fields to owned.
     ///
     /// Note that this does **not** affect `extras`!
@@ -273,7 +275,7 @@ impl std::error::Error for UriError {
 }
 
 /// **Warning**: this implementation may needlessly allocate, consider using `TryFrom<&str>` instead.
-impl<'a, T> core::str::FromStr for Uri<'a, T> where for<'de> T: DeserializeParams<'de> {
+impl<'a, T: for<'de> DeserializeParams<'de>> core::str::FromStr for Uri<'a, T> {
     type Err = Error<T::Error>;
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
@@ -281,7 +283,7 @@ impl<'a, T> core::str::FromStr for Uri<'a, T> where for<'de> T: DeserializeParam
     }
 }
 
-impl<'a, T> TryFrom<&'a str> for Uri<'a, T> where T: DeserializeParams<'a> {
+impl<'a, T: DeserializeParams<'a>> TryFrom<&'a str> for Uri<'a, T> {
     type Error = Error<T::Error>;
 
     fn try_from(s: &'a str) -> Result<Self, Self::Error> {
@@ -290,7 +292,7 @@ impl<'a, T> TryFrom<&'a str> for Uri<'a, T> where T: DeserializeParams<'a> {
 }
 
 /// **Warning**: this implementation may needlessly allocate, consider using `TryFrom<&str>` instead.
-impl<'a, T> TryFrom<String> for Uri<'a, T> where for<'de> T: DeserializeParams<'de> {
+impl<'a, T: for<'de> DeserializeParams<'de>> TryFrom<String> for Uri<'a, T> {
     type Error = Error<T::Error>;
 
     fn try_from(s: String) -> Result<Self, Self::Error> {
@@ -299,7 +301,7 @@ impl<'a, T> TryFrom<String> for Uri<'a, T> where for<'de> T: DeserializeParams<'
 }
 
 /// **Warning**: this implementation may needlessly allocate, consider using `TryFrom<&str>` instead.
-impl<'a, T> TryFrom<Cow<'a, str>> for Uri<'a, T> where T: for<'de> DeserializeParams<'de> {
+impl<'a, T: for<'de> DeserializeParams<'de>> TryFrom<Cow<'a, str>> for Uri<'a, T> {
     type Error = Error<T::Error>;
 
     fn try_from(s: Cow<'a, str>) -> Result<Self, Self::Error> {
