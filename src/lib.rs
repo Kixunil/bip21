@@ -57,7 +57,7 @@ pub use ser::{SerializeParams};
 /// This struct represents all fields of BIP21 URI with the ability to add more extra fields using
 /// the `extras` field. By default there are no extra fields so an empty implementation is used.
 #[non_exhaustive]
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct Uri<'a, Extras = NoExtras> {
     /// The address provided in the URI.
     ///
