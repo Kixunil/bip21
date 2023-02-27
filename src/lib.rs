@@ -53,6 +53,7 @@ use percent_encoding_rfc3986::{PercentDecode, PercentDecodeError};
 #[cfg(feature = "non-compliant-bytes")]
 use either::Either;
 use core::convert::{TryFrom, TryInto};
+use bitcoin::address::NetworkValidation;
 
 pub use de::{DeserializeParams, DeserializationState, DeserializationError};
 pub use ser::{SerializeParams};
@@ -78,11 +79,14 @@ pub use ser::{SerializeParams};
 /// [See compatibility table.](https://github.com/btcpayserver/btcpayserver/issues/2110)
 #[non_exhaustive]
 #[derive(Debug, Clone)]
-pub struct Uri<'a, Extras = NoExtras> {
+pub struct Uri<'a, NetVal = bitcoin::address::NetworkChecked, Extras = NoExtras>
+where
+    NetVal: NetworkValidation,
+{
     /// The address provided in the URI.
     ///
     /// This field is mandatory because the address is mandatory in BIP21.
-    pub address: bitcoin::Address,
+    pub address: bitcoin::Address<NetVal>,
 
     /// Number of satoshis requested as payment.
     pub amount: Option<bitcoin::Amount>,
@@ -97,12 +101,12 @@ pub struct Uri<'a, Extras = NoExtras> {
     pub extras: Extras,
 }
 
-impl<'a, T: Default> Uri<'a, T> {
+impl<'a, NetVal: NetworkValidation, T: Default> Uri<'a, NetVal, T> {
     /// Creates an URI with defaults.
     ///
     /// This sets all fields except `address` to default values.
     /// They can be overwritten in subsequent assignments before displaying the URI.
-    pub fn new(address: bitcoin::Address) -> Self {
+    pub fn new(address: bitcoin::Address<NetVal>) -> Self {
         Uri {
             address,
             amount: None,
@@ -113,12 +117,12 @@ impl<'a, T: Default> Uri<'a, T> {
     }
 }
 
-impl<'a, T> Uri<'a, T> {
+impl<'a, NetVal: NetworkValidation, T> Uri<'a, NetVal, T> {
     /// Creates an URI with defaults.
     ///
     /// This sets all fields except `address` and `extras` to default values.
     /// They can be overwritten in subsequent assignments before displaying the URI.
-    pub fn with_extras(address: bitcoin::Address, extras: T) -> Self {
+    pub fn with_extras(address: bitcoin::Address<NetVal>, extras: T) -> Self {
         Uri {
             address,
             amount: None,
@@ -127,6 +131,38 @@ impl<'a, T> Uri<'a, T> {
             extras,
         }
     }
+}
+
+impl<'a, T> Uri<'a, bitcoin::address::NetworkUnchecked, T> {
+    /// Checks that the bitcoin network in the URI is `network`.
+    pub fn require_network(self, network: bitcoin::Network) -> Result<Uri<'a, bitcoin::address::NetworkChecked, T>, InvalidNetworkError> {
+        if self.address.is_valid_for_network(network) {
+            Ok(self.assume_checked())
+        } else {
+            Err(InvalidNetworkError {
+                required: network,
+                found: self.address.network,
+            })
+        }
+    }
+
+    /// Marks URI validated without checks.
+    pub fn assume_checked(self) -> Uri<'a, bitcoin::address::NetworkChecked, T> {
+        Uri {
+            address: self.address.assume_checked(),
+            amount: self.amount,
+            label: self.label,
+            message: self.message,
+            extras: self.extras,
+        }
+    }
+}
+
+/// An error returned when network validation fails.
+#[derive(Debug, Clone)]
+pub struct InvalidNetworkError {
+    required: bitcoin::Network,
+    found: bitcoin::Network,
 }
 
 /// Abstracted stringly parameter in the URI.
@@ -355,7 +391,7 @@ mod tests {
     #[test]
     fn just_address() {
         let input = "bitcoin:1andreas3batLhQa2FawWjeyjCqyBzypd";
-        let uri = input.parse::<Uri<'_>>().unwrap();
+        let uri = input.parse::<Uri<'_, _>>().unwrap().require_network(bitcoin::Network::Bitcoin).unwrap();
         assert_eq!(uri.address.to_string(), "1andreas3batLhQa2FawWjeyjCqyBzypd");
         assert!(uri.amount.is_none());
         assert!(uri.label.is_none());
@@ -367,7 +403,7 @@ mod tests {
     #[test]
     fn address_with_name() {
         let input = "bitcoin:1andreas3batLhQa2FawWjeyjCqyBzypd?label=Luke-Jr";
-        let uri = input.parse::<Uri<'_>>().unwrap();
+        let uri = input.parse::<Uri<'_, _>>().unwrap().require_network(bitcoin::Network::Bitcoin).unwrap();
         let label: Cow<'_, str> = uri.label.clone().unwrap().try_into().unwrap();
         assert_eq!(uri.address.to_string(), "1andreas3batLhQa2FawWjeyjCqyBzypd");
         assert_eq!(label, "Luke-Jr");
@@ -381,7 +417,7 @@ mod tests {
     #[test]
     fn request_20_point_30_btc_to_luke_dash_jr() {
         let input = "bitcoin:1andreas3batLhQa2FawWjeyjCqyBzypd?amount=20.3&label=Luke-Jr";
-        let uri = input.parse::<Uri<'_>>().unwrap();
+        let uri = input.parse::<Uri<'_, _>>().unwrap().require_network(bitcoin::Network::Bitcoin).unwrap();
         let label: Cow<'_, str> = uri.label.clone().unwrap().try_into().unwrap();
         assert_eq!(uri.address.to_string(), "1andreas3batLhQa2FawWjeyjCqyBzypd");
         assert_eq!(label, "Luke-Jr");
@@ -395,7 +431,7 @@ mod tests {
     #[test]
     fn request_50_btc_with_message() {
         let input = "bitcoin:1andreas3batLhQa2FawWjeyjCqyBzypd?amount=50&label=Luke-Jr&message=Donation%20for%20project%20xyz";
-        let uri = input.parse::<Uri<'_>>().unwrap();
+        let uri = input.parse::<Uri<'_, _>>().unwrap().require_network(bitcoin::Network::Bitcoin).unwrap();
         let label: Cow<'_, str> = uri.label.clone().unwrap().try_into().unwrap();
         let message: Cow<'_, str> = uri.message.clone().unwrap().try_into().unwrap();
         assert_eq!(uri.address.to_string(), "1andreas3batLhQa2FawWjeyjCqyBzypd");
@@ -409,14 +445,14 @@ mod tests {
     #[test]
     fn required_not_understood() {
         let input = "bitcoin:1andreas3batLhQa2FawWjeyjCqyBzypd?req-somethingyoudontunderstand=50&req-somethingelseyoudontget=999";
-        let uri = input.parse::<Uri<'_>>();
+        let uri = input.parse::<Uri<'_, _>>();
         assert!(uri.is_err());
     }
 
     #[test]
     fn required_understood() {
         let input = "bitcoin:1andreas3batLhQa2FawWjeyjCqyBzypd?somethingyoudontunderstand=50&somethingelseyoudontget=999";
-        let uri = input.parse::<Uri<'_>>().unwrap();
+        let uri = input.parse::<Uri<'_, _>>().unwrap().require_network(bitcoin::Network::Bitcoin).unwrap();
         assert_eq!(uri.address.to_string(), "1andreas3batLhQa2FawWjeyjCqyBzypd");
         assert!(uri.amount.is_none());
         assert!(uri.label.is_none());
