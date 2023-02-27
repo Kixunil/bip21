@@ -5,7 +5,7 @@
 //! Check [`SerializeParams`] to get started.
 
 use alloc::borrow::Cow;
-use bitcoin::util::amount::Denomination;
+use bitcoin::amount::Denomination;
 use core::fmt;
 use super::{Uri, Param, ParamInner};
 
@@ -121,7 +121,7 @@ fn maybe_display_param(writer: &mut impl fmt::Write, key: impl fmt::Display, val
 
 /// Formats QR-code-optimized URI if alternate form (`{:#}`) is used.
 #[rustfmt::skip]
-impl<'a, T> fmt::Display for Uri<'a, T> where for<'b> &'b T: SerializeParams {
+impl<'a, T> fmt::Display for Uri<'a, bitcoin::address::NetworkChecked, T> where for<'b> &'b T: SerializeParams {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         if f.alternate() {
             write!(f, "BITCOIN:{:#}", self.address)?;

@@ -10,13 +10,14 @@ use alloc::borrow::ToOwned;
 use alloc::borrow::Cow;
 use alloc::string::String;
 use core::convert::{TryFrom, TryInto};
-use bitcoin::util::amount::{Denomination, ParseAmountError};
-use bitcoin::util::address::Error as AddressError;
+use bitcoin::amount::{Denomination, ParseAmountError};
+use bitcoin::address::Error as AddressError;
+use bitcoin::address::NetworkValidation;
 use core::fmt;
 use super::{Uri, Param};
 use percent_encoding_rfc3986::PercentDecodeError;
 
-impl<'a, T: DeserializeParams<'a>> Uri<'a, T> {
+impl<'a, T: DeserializeParams<'a>> Uri<'a, bitcoin::address::NetworkUnchecked, T> {
     /// Implements deserialization.
     fn deserialize_raw(string: &'a str) -> Result<Self, Error<T::Error>> {
         const SCHEME: &str = "bitcoin:";
@@ -82,11 +83,11 @@ impl<'a, T: DeserializeParams<'a>> Uri<'a, T> {
     }
 }
 
-impl<'a, T> Uri<'a, T> {
+impl<'a, NetVal: NetworkValidation, T> Uri<'a, NetVal, T> {
     /// Makes the lifetime `'static` by converting all fields to owned.
     ///
     /// Note that this does **not** affect `extras`!
-    fn into_static(self) -> Uri<'static, T> {
+    fn into_static(self) -> Uri<'static, NetVal, T> {
         Uri {
             address: self.address,
             amount: self.amount,
@@ -282,7 +283,7 @@ impl std::error::Error for UriError {
 }
 
 /// **Warning**: this implementation may needlessly allocate, consider using `TryFrom<&str>` instead.
-impl<'a, T: for<'de> DeserializeParams<'de>> core::str::FromStr for Uri<'a, T> {
+impl<'a, T: for<'de> DeserializeParams<'de>> core::str::FromStr for Uri<'a, bitcoin::address::NetworkUnchecked, T> {
     type Err = Error<T::Error>;
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
@@ -290,7 +291,7 @@ impl<'a, T: for<'de> DeserializeParams<'de>> core::str::FromStr for Uri<'a, T> {
     }
 }
 
-impl<'a, T: DeserializeParams<'a>> TryFrom<&'a str> for Uri<'a, T> {
+impl<'a, T: DeserializeParams<'a>> TryFrom<&'a str> for Uri<'a, bitcoin::address::NetworkUnchecked, T> {
     type Error = Error<T::Error>;
 
     fn try_from(s: &'a str) -> Result<Self, Self::Error> {
@@ -299,7 +300,7 @@ impl<'a, T: DeserializeParams<'a>> TryFrom<&'a str> for Uri<'a, T> {
 }
 
 /// **Warning**: this implementation may needlessly allocate, consider using `TryFrom<&str>` instead.
-impl<'a, T: for<'de> DeserializeParams<'de>> TryFrom<String> for Uri<'a, T> {
+impl<'a, T: for<'de> DeserializeParams<'de>> TryFrom<String> for Uri<'a, bitcoin::address::NetworkUnchecked, T> {
     type Error = Error<T::Error>;
 
     fn try_from(s: String) -> Result<Self, Self::Error> {
@@ -308,7 +309,7 @@ impl<'a, T: for<'de> DeserializeParams<'de>> TryFrom<String> for Uri<'a, T> {
 }
 
 /// **Warning**: this implementation may needlessly allocate, consider using `TryFrom<&str>` instead.
-impl<'a, T: for<'de> DeserializeParams<'de>> TryFrom<Cow<'a, str>> for Uri<'a, T> {
+impl<'a, T: for<'de> DeserializeParams<'de>> TryFrom<Cow<'a, str>> for Uri<'a, bitcoin::address::NetworkUnchecked, T> {
     type Error = Error<T::Error>;
 
     fn try_from(s: Cow<'a, str>) -> Result<Self, Self::Error> {
