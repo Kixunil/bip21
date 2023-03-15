@@ -22,6 +22,11 @@
 //! * `std` enables integration with `std` - mainly `std::error::Error`.
 //! * `non-compliant-bytes` - enables use of non-compliant API that can parse non-UTF-8 URI values.
 //!
+//! ## Stabilization roadmap
+//!
+//! The crate can not (and will not) be stabilized until either [`bitcoin`] is stabilized or
+//! [`bitcoin::Address`] and [`bitcoin::Amount`] are moved to (a) separate stable crate(s).
+//!
 //! ## MSRV
 //!
 //! 1.41.1
@@ -56,6 +61,21 @@ pub use ser::{SerializeParams};
 ///
 /// This struct represents all fields of BIP21 URI with the ability to add more extra fields using
 /// the `extras` field. By default there are no extra fields so an empty implementation is used.
+///
+/// ## Parsing
+///
+/// `Uri` implements `FromStr` so you can simply use `s.parse::<Uri<'static>>()`. However that is
+/// not zero-copy. If you wish to use zero-copy parsing call `try_into()` instead.
+///
+/// ## Displaying
+///
+/// `Display` is implemented for `Uri` so you can format it naturally. However it currently does
+/// **not** support alignment.
+///
+/// To display the URI optimized for QR codes use alternate formatting (`{:#}`). The code assumes
+/// strict BIP-21, so it displays the schema as upper case. This is incompatible with some (buggy) wallets but creates the most optimal QR codes.
+///
+/// [See compatibility table.](https://github.com/btcpayserver/btcpayserver/issues/2110)
 #[non_exhaustive]
 #[derive(Debug, Clone)]
 pub struct Uri<'a, Extras = NoExtras> {

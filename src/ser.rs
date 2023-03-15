@@ -119,6 +119,7 @@ fn maybe_display_param(writer: &mut impl fmt::Write, key: impl fmt::Display, val
     }
 }
 
+/// Formats QR-code-optimized URI if alternate form (`{:#}`) is used.
 #[rustfmt::skip]
 impl<'a, T> fmt::Display for Uri<'a, T> where for<'b> &'b T: SerializeParams {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
