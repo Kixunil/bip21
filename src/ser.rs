@@ -124,7 +124,7 @@ fn maybe_display_param(writer: &mut impl fmt::Write, key: impl fmt::Display, val
 impl<'a, T> fmt::Display for Uri<'a, bitcoin::address::NetworkChecked, T> where for<'b> &'b T: SerializeParams {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         if f.alternate() {
-            write!(f, "BITCOIN:{:#}", self.address)?;
+            write!(f, "bitcoin:{:#}", self.address)?;
         } else {
             write!(f, "bitcoin:{}", self.address)?;
         }

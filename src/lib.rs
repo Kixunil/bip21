@@ -73,8 +73,9 @@ pub use ser::{SerializeParams};
 /// `Display` is implemented for `Uri` so you can format it naturally. However it currently does
 /// **not** support alignment.
 ///
-/// To display the URI optimized for QR codes use alternate formatting (`{:#}`). The code assumes
-/// strict BIP-21, so it displays the schema as upper case. This is incompatible with some (buggy) wallets but creates the most optimal QR codes.
+/// The code does _not_ assume strict BIP-21, so it displays the schema lower case
+/// instead as upper case.
+/// This makes it compatible with some (buggy) wallets but does not create the most optimal QR codes.
 ///
 /// [See compatibility table.](https://github.com/btcpayserver/btcpayserver/issues/2110)
 #[non_exhaustive]
