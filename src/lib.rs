@@ -56,7 +56,7 @@ use core::convert::{TryFrom, TryInto};
 use bitcoin::address::NetworkValidation;
 
 pub use de::{DeserializeParams, DeserializationState, DeserializationError};
-pub use ser::{SerializeParams};
+pub use ser::SerializeParams;
 
 /// Parsed BIP21 URI.
 ///
