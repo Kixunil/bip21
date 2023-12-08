@@ -11,7 +11,7 @@ use alloc::borrow::Cow;
 use alloc::string::String;
 use core::convert::{TryFrom, TryInto};
 use bitcoin::amount::{Denomination, ParseAmountError};
-use bitcoin::address::Error as AddressError;
+use bitcoin::address::ParseError as AddressError;
 use bitcoin::address::NetworkValidation;
 use core::fmt;
 use super::{Uri, Param};
