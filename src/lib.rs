@@ -141,7 +141,7 @@ impl<'a, T> Uri<'a, bitcoin::address::NetworkUnchecked, T> {
         } else {
             Err(InvalidNetworkError {
                 required: network,
-                found: self.address.network,
+                found: *self.address.network(),
             })
         }
     }
