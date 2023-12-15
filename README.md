@@ -28,7 +28,7 @@ The crate is `no_std` but does require `alloc`.
 
 ## MSRV
 
-1.41.1
+1.48.0
 
 ## License
 
