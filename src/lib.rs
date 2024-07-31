@@ -134,38 +134,6 @@ impl<'a, NetVal: NetworkValidation, T> Uri<'a, NetVal, T> {
     }
 }
 
-impl<'a, T> Uri<'a, bitcoin::address::NetworkUnchecked, T> {
-    /// Checks that the bitcoin network in the URI is `network`.
-    pub fn require_network(self, network: bitcoin::Network) -> Result<Uri<'a, bitcoin::address::NetworkChecked, T>, InvalidNetworkError> {
-        if self.address.is_valid_for_network(network) {
-            Ok(self.assume_checked())
-        } else {
-            Err(InvalidNetworkError {
-                required: network,
-                found: *self.address.network(),
-            })
-        }
-    }
-
-    /// Marks URI validated without checks.
-    pub fn assume_checked(self) -> Uri<'a, bitcoin::address::NetworkChecked, T> {
-        Uri {
-            address: self.address.assume_checked(),
-            amount: self.amount,
-            label: self.label,
-            message: self.message,
-            extras: self.extras,
-        }
-    }
-}
-
-/// An error returned when network validation fails.
-#[derive(Debug, Clone)]
-pub struct InvalidNetworkError {
-    required: bitcoin::Network,
-    found: bitcoin::Network,
-}
-
 /// Abstracted stringly parameter in the URI.
 ///
 /// This type abstracts the parameter that may be encoded allowing lazy decoding, possibly even

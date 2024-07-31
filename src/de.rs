@@ -228,6 +228,7 @@ enum UriErrorInner {
     TooShort,
     InvalidScheme,
     Address(AddressError),
+    AddressNetwork(bitcoin::address::Error),
     Amount(ParseAmountError),
     UnknownRequiredParameter(String),
     PercentDecode {
@@ -255,6 +256,7 @@ impl fmt::Display for UriError {
             UriErrorInner::TooShort => write!(f, "the URI is too short"),
             UriErrorInner::InvalidScheme => write!(f, "the URI has invalid scheme"),
             UriErrorInner::Address(_) => write!(f, "the address is invalid"),
+            UriErrorInner::AddressNetwork(_) => write!(f, "the address network is invalid"),
             UriErrorInner::Amount(_) => write!(f, "the amount is invalid"),
             UriErrorInner::UnknownRequiredParameter(parameter) => write!(f, "the URI contains unknown required parameter '{}'", parameter),
             #[cfg(feature = "std")]
@@ -274,6 +276,7 @@ impl std::error::Error for UriError {
             UriErrorInner::TooShort => None,
             UriErrorInner::InvalidScheme => None,
             UriErrorInner::Address(error) => Some(error),
+            UriErrorInner::AddressNetwork(error) => Some(error),
             UriErrorInner::Amount(error) => Some(error),
             UriErrorInner::UnknownRequiredParameter(_) => None,
             UriErrorInner::PercentDecode { parameter: _, error } => Some(error),
@@ -316,6 +319,37 @@ impl<'a, T: for<'de> DeserializeParams<'de>> TryFrom<Cow<'a, str>> for Uri<'a, b
         match s {
             Cow::Borrowed(s) => s.try_into(),
             Cow::Owned(s) => s.parse(),
+        }
+    }
+}
+
+impl<'a, T: DeserializeParams<'a>> Uri<'a, bitcoin::address::NetworkUnchecked, T> {
+    /// Checks whether network of this address is as required.
+    ///
+    /// For details about this mechanism, see section [*parsing addresses*](bitcoin::Address#parsing-addresses) on [`bitcoin::Address`].
+    pub fn require_network(self, network: bitcoin::Network) -> Result<Uri<'a, bitcoin::address::NetworkChecked, T>, Error<T::Error>> {
+        let address = self
+            .address
+            .require_network(network)
+            .map_err(UriErrorInner::AddressNetwork)
+            .map_err(Error::uri)?;
+        Ok(Uri {
+            address,
+            amount: self.amount,
+            label: self.label,
+            message: self.message,
+            extras: self.extras,
+        })
+    }
+
+    /// Marks URI validated without checks.
+    pub fn assume_checked(self) -> Uri<'a, bitcoin::address::NetworkChecked, T> {
+        Uri {
+            address: self.address.assume_checked(),
+            amount: self.amount,
+            label: self.label,
+            message: self.message,
+            extras: self.extras,
         }
     }
 }
