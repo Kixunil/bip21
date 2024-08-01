@@ -50,5 +50,10 @@ jobs:
           rust-version: ${{ matrix.rust }}
       - name: Checkout
         uses: actions/checkout@v2
+      - name: Fixes for MSRV
+        if: matrix.rust == '1.56.1'
+        run: |
+          cargo update
+          cargo update -p cc --precise 1.0.105
       - name: Test
         run: cargo test
