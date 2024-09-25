@@ -25,7 +25,7 @@ impl<'a, T: DeserializeParams<'a>> Uri<'a, bitcoin::address::NetworkUnchecked, T
             return Err(Error::Uri(UriError(UriErrorInner::TooShort)));
         }
 
-        if !string[..SCHEME.len()].eq_ignore_ascii_case(SCHEME) {
+        if !string.get(..SCHEME.len()).is_some_and(|s| s.eq_ignore_ascii_case(SCHEME)) {
             return Err(Error::Uri(UriError(UriErrorInner::InvalidScheme)));
         }
 

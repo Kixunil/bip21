@@ -427,4 +427,11 @@ mod tests {
         assert!(uri.label.is_none());
         assert!(uri.message.is_none());
     }
+
+    #[test]
+    fn bad_unicode_scheme() {
+        let input = "bitcoinö:1andreas3batLhQa2FawWjeyjCqyBzypd";
+        let uri = input.parse::<Uri<'_, _>>();
+        assert!(uri.is_err());
+    }
 }
