@@ -18,7 +18,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Set up Rust
-        uses: hecrj/setup-rust-action@v1
+        uses: hecrj/setup-rust-action@v1.4.1
         with:
           components: clippy
       - uses: actions/checkout@v2
@@ -28,7 +28,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Set up Rust
-        uses: hecrj/setup-rust-action@v1
+        uses: hecrj/setup-rust-action@v1.4.1
       - uses: actions/checkout@v2
       - run: cargo check --all
 
@@ -45,7 +45,7 @@ jobs:
 
     steps:
       - name: Setup Rust
-        uses: hecrj/setup-rust-action@v1
+        uses: hecrj/setup-rust-action@v1.4.1
         with:
           rust-version: ${{ matrix.rust }}
       - name: Checkout
