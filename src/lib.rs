@@ -102,7 +102,7 @@ where
     pub extras: Extras,
 }
 
-impl<'a, NetVal: NetworkValidation, T: Default> Uri<'a, NetVal, T> {
+impl<NetVal: NetworkValidation, T: Default> Uri<'_, NetVal, T> {
     /// Creates an URI with defaults.
     ///
     /// This sets all fields except `address` to default values.
@@ -118,7 +118,7 @@ impl<'a, NetVal: NetworkValidation, T: Default> Uri<'a, NetVal, T> {
     }
 }
 
-impl<'a, NetVal: NetworkValidation, T> Uri<'a, NetVal, T> {
+impl<NetVal: NetworkValidation, T> Uri<'_, NetVal, T> {
     /// Creates an URI with defaults.
     ///
     /// This sets all fields except `address` and `extras` to default values.
@@ -194,7 +194,7 @@ impl<'a> From<&'a str> for Param<'a> {
 }
 
 /// Cheap conversion
-impl<'a> From<String> for Param<'a> {
+impl From<String> for Param<'_> {
     fn from(value: String) -> Self {
         Param(ParamInner::UnencodedString(Cow::Owned(value)))
     }
@@ -212,7 +212,7 @@ impl<'a> From<&'a [u8]> for Param<'a> {
 /// Cheap conversion
 #[cfg(feature = "non-compliant-bytes")]
 #[cfg_attr(docsrs, doc(cfg(feature = "non-compliant-bytes")))]
-impl<'a> From<Vec<u8>> for Param<'a> {
+impl From<Vec<u8>> for Param<'_> {
     fn from(value: Vec<u8>) -> Self {
         Param(ParamInner::UnencodedBytes(Cow::Owned(value)))
     }
@@ -284,6 +284,7 @@ enum ParamInner<'a> {
 /// The lifetime of this may be shorter than that of [`Param<'a>`].
 #[cfg(feature = "non-compliant-bytes")]
 #[cfg_attr(docsrs, doc(cfg(feature = "non-compliant-bytes")))]
+#[cfg_attr(feature = "non-compliant-bytes", allow(dead_code))]
 pub struct ParamBytes<'a>(ParamIterInner<'a, core::iter::Cloned<core::slice::Iter<'a, u8>>>);
 
 /// Iterator over decoded bytes inside paramter.
@@ -291,6 +292,7 @@ pub struct ParamBytes<'a>(ParamIterInner<'a, core::iter::Cloned<core::slice::Ite
 /// The lifetime of this is same as that of [`Param<'a>`].
 #[cfg(feature = "non-compliant-bytes")]
 #[cfg_attr(docsrs, doc(cfg(feature = "non-compliant-bytes")))]
+#[cfg_attr(feature = "non-compliant-bytes", allow(dead_code))]
 pub struct ParamBytesOwned<'a>(ParamIterInner<'a, Either<core::iter::Cloned<core::slice::Iter<'a, u8>>, alloc::vec::IntoIter<u8>>>);
 
 #[cfg(feature = "non-compliant-bytes")]
@@ -315,7 +317,7 @@ impl DeserializationError for NoExtras {
     type Error = core::convert::Infallible;
 }
 
-impl<'de> DeserializationState<'de> for EmptyState {
+impl DeserializationState<'_> for EmptyState {
     type Value = NoExtras;
 
     fn is_param_known(&self, _key: &str) -> bool {
@@ -331,7 +333,7 @@ impl<'de> DeserializationState<'de> for EmptyState {
     }
 }
 
-impl<'a> SerializeParams for &'a NoExtras {
+impl SerializeParams for &NoExtras {
     type Key = core::convert::Infallible;
     type Value = core::convert::Infallible;
     type Iterator = core::iter::Empty<(Self::Key, Self::Value)>;
@@ -426,5 +428,64 @@ mod tests {
         assert!(uri.amount.is_none());
         assert!(uri.label.is_none());
         assert!(uri.message.is_none());
+
+        assert_eq!(uri.to_string(), "bitcoin:1andreas3batLhQa2FawWjeyjCqyBzypd");
+    }
+
+    #[test]
+    fn label_with_rfc3986_param_separator() {
+        let input = "bitcoin:1andreas3batLhQa2FawWjeyjCqyBzypd?label=foo%26bar%20%3D%20baz/blah?;:@";
+        let uri = input.parse::<Uri<'_, _>>().unwrap().require_network(bitcoin::Network::Bitcoin).unwrap();
+        let label: Cow<'_, str> = uri.label.clone().unwrap().try_into().unwrap();
+        assert_eq!(uri.address.to_string(), "1andreas3batLhQa2FawWjeyjCqyBzypd");
+        assert_eq!(label, "foo&bar = baz/blah?;:@");
+        assert!(uri.amount.is_none());
+        assert!(uri.message.is_none());
+
+        assert_eq!(uri.to_string(), input);
+    }
+
+    #[test]
+    fn label_with_rfc3986_fragment_separator() {
+        let input = "bitcoin:1andreas3batLhQa2FawWjeyjCqyBzypd?label=foo%23bar";
+        let uri = input.parse::<Uri<'_, _>>().unwrap().require_network(bitcoin::Network::Bitcoin).unwrap();
+        let label: Cow<'_, str> = uri.label.clone().unwrap().try_into().unwrap();
+        assert_eq!(uri.address.to_string(), "1andreas3batLhQa2FawWjeyjCqyBzypd");
+        assert_eq!(label, "foo#bar");
+        assert!(uri.amount.is_none());
+        assert!(uri.message.is_none());
+
+        assert_eq!(uri.to_string(), input);
+    }
+
+    #[test]
+    fn rfc3986_empty_fragment_not_defined_in_bip21() {
+        let input = "bitcoin:1andreas3batLhQa2FawWjeyjCqyBzypd?label=foo#";
+        let uri = input.parse::<Uri<'_, _>>().unwrap().require_network(bitcoin::Network::Bitcoin).unwrap();
+        let label: Cow<'_, str> = uri.label.clone().unwrap().try_into().unwrap();
+        assert_eq!(uri.address.to_string(), "1andreas3batLhQa2FawWjeyjCqyBzypd");
+        assert_eq!(label, "foo");
+        assert!(uri.amount.is_none());
+        assert!(uri.message.is_none());
+        assert_eq!(uri.to_string(), "bitcoin:1andreas3batLhQa2FawWjeyjCqyBzypd?label=foo");
+    }
+
+    #[test]
+    fn rfc3986_non_empty_fragment_not_defined_in_bip21() {
+        let input = "bitcoin:1andreas3batLhQa2FawWjeyjCqyBzypd?label=foo#&message=not%20part%20of%20a%20message";
+        let uri = input.parse::<Uri<'_, _>>().unwrap().require_network(bitcoin::Network::Bitcoin).unwrap();
+        let label: Cow<'_, str> = uri.label.clone().unwrap().try_into().unwrap();
+        assert_eq!(uri.address.to_string(), "1andreas3batLhQa2FawWjeyjCqyBzypd");
+        assert_eq!(label, "foo");
+        assert!(uri.amount.is_none());
+        assert!(uri.message.is_none());
+        assert_eq!(uri.to_string(), "bitcoin:1andreas3batLhQa2FawWjeyjCqyBzypd?label=foo");
+    }
+
+    #[test]
+    fn bad_unicode_scheme() {
+        let input = "bitcoinö:1andreas3batLhQa2FawWjeyjCqyBzypd";
+        let uri = input.parse::<Uri<'_, _>>();
+        assert!(uri.is_err());
     }
 }

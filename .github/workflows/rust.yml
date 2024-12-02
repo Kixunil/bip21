@@ -1,6 +1,6 @@
 name: build
 
-on: push
+on: pull_request
 
 jobs:
   codestyle:
@@ -37,10 +37,10 @@ jobs:
     strategy:
       matrix:
         os: [ubuntu-latest, windows-latest, macOS-latest]
-        rust: [stable, 1.56.1]
+        rust: [stable, 1.63.0]
         exclude:
           - os: macOS-latest
-            rust: 1.56.1
+            rust: 1.63.0
     runs-on: ${{ matrix.os }}
 
     steps:
@@ -50,5 +50,9 @@ jobs:
           rust-version: ${{ matrix.rust }}
       - name: Checkout
         uses: actions/checkout@v2
+      - name: Fixes for MSRV
+        if: matrix.rust == '1.63.0'
+        run: |
+          cargo update
       - name: Test
         run: cargo test
