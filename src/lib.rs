@@ -426,5 +426,57 @@ mod tests {
         assert!(uri.amount.is_none());
         assert!(uri.label.is_none());
         assert!(uri.message.is_none());
+
+        assert_eq!(uri.to_string(), "bitcoin:1andreas3batLhQa2FawWjeyjCqyBzypd");
+    }
+
+    #[test]
+    fn label_with_rfc3986_param_separator() {
+        let input = "bitcoin:1andreas3batLhQa2FawWjeyjCqyBzypd?label=foo%26bar%20%3D%20baz/blah?;:@";
+        let uri = input.parse::<Uri<'_, _>>().unwrap().require_network(bitcoin::Network::Bitcoin).unwrap();
+        let label: Cow<'_, str> = uri.label.clone().unwrap().try_into().unwrap();
+        assert_eq!(uri.address.to_string(), "1andreas3batLhQa2FawWjeyjCqyBzypd");
+        assert_eq!(label, "foo&bar = baz/blah?;:@");
+        assert!(uri.amount.is_none());
+        assert!(uri.message.is_none());
+
+        assert_eq!(uri.to_string(), input);
+    }
+
+    #[test]
+    fn label_with_rfc3986_fragment_separator() {
+        let input = "bitcoin:1andreas3batLhQa2FawWjeyjCqyBzypd?label=foo%23bar";
+        let uri = input.parse::<Uri<'_, _>>().unwrap().require_network(bitcoin::Network::Bitcoin).unwrap();
+        let label: Cow<'_, str> = uri.label.clone().unwrap().try_into().unwrap();
+        assert_eq!(uri.address.to_string(), "1andreas3batLhQa2FawWjeyjCqyBzypd");
+        assert_eq!(label, "foo#bar");
+        assert!(uri.amount.is_none());
+        assert!(uri.message.is_none());
+
+        assert_eq!(uri.to_string(), input);
+    }
+
+    #[test]
+    fn rfc3986_empty_fragment_not_defined_in_bip21() {
+        let input = "bitcoin:1andreas3batLhQa2FawWjeyjCqyBzypd?label=foo#";
+        let uri = input.parse::<Uri<'_, _>>().unwrap().require_network(bitcoin::Network::Bitcoin).unwrap();
+        let label: Cow<'_, str> = uri.label.clone().unwrap().try_into().unwrap();
+        assert_eq!(uri.address.to_string(), "1andreas3batLhQa2FawWjeyjCqyBzypd");
+        assert_eq!(label, "foo");
+        assert!(uri.amount.is_none());
+        assert!(uri.message.is_none());
+        assert_eq!(uri.to_string(), "bitcoin:1andreas3batLhQa2FawWjeyjCqyBzypd?label=foo");
+    }
+
+    #[test]
+    fn rfc3986_non_empty_fragment_not_defined_in_bip21() {
+        let input = "bitcoin:1andreas3batLhQa2FawWjeyjCqyBzypd?label=foo#&message=not%20part%20of%20a%20message";
+        let uri = input.parse::<Uri<'_, _>>().unwrap().require_network(bitcoin::Network::Bitcoin).unwrap();
+        let label: Cow<'_, str> = uri.label.clone().unwrap().try_into().unwrap();
+        assert_eq!(uri.address.to_string(), "1andreas3batLhQa2FawWjeyjCqyBzypd");
+        assert_eq!(label, "foo");
+        assert!(uri.amount.is_none());
+        assert!(uri.message.is_none());
+        assert_eq!(uri.to_string(), "bitcoin:1andreas3batLhQa2FawWjeyjCqyBzypd?label=foo");
     }
 }

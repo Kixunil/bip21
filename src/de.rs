@@ -42,6 +42,16 @@ impl<'a, T: DeserializeParams<'a>> Uri<'a, bitcoin::address::NetworkUnchecked, T
         let mut label = None;
         let mut message = None;
         if let Some(params) = params {
+            // [RFC 3986 § 3.4](https://www.rfc-editor.org/rfc/rfc3986#section-3.4):
+            //
+            // > The query component is indicated by the first question
+            // > mark ("?") character and terminated by a number sign ("#") character
+            // > or by the end of the URI.
+            let params = match params.find('#') {
+                Some(pos) => &params[..pos],
+                None => params,
+            };
+
             for param in params.split('&') {
                 let pos = param
                     .find('=')

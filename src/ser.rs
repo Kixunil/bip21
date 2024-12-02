@@ -47,7 +47,61 @@ impl<'a, W: fmt::Write> fmt::Write for EqSignChecker<'a, W> {
 }
 
 /// Set of characters that will be percent-encoded
-const ASCII_SET: percent_encoding_rfc3986::AsciiSet = percent_encoding_rfc3986::CONTROLS.add(b'&').add(b'?').add(b' ').add(b'=');
+///
+/// This contains anything not in `query` (i.e. ``gen-delim` from the quoted
+/// definitions`) as per RFC 3986, as well as '&' and '=' as per BIP 21.
+///
+/// [BIP 21](https://github.com/bitcoin/bips/blob/master/bip-0021.mediawiki#abnf-grammar):
+///
+/// > ```text
+/// > labelparam     = "label=" *qchar
+/// > messageparam   = "message=" *qchar
+/// > otherparam     = qchar *qchar [ "=" *qchar ]
+/// > ```
+/// ...
+/// > Here, "qchar" corresponds to valid characters of an RFC 3986 URI query
+/// > component, excluding the "=" and "&" characters, which this BIP takes as
+/// > separators.
+///
+/// [RFC 3986 Appendix A](https://www.rfc-editor.org/rfc/rfc3986#appendix-A):
+///
+/// > ```text
+/// > pchar         = unreserved / pct-encoded / sub-delims / ":" / "@"
+/// > query         = *( pchar / "/" / "?" )
+/// > ```
+/// ...
+/// > ```text
+/// > pct-encoded   = "%" HEXDIG HEXDIG
+/// > unreserved    = ALPHA / DIGIT / "-" / "." / "_" / "~"
+/// > ```
+/// ...
+/// > ```text
+/// > sub-delims    = "!" / "$" / "&" / "'" / "(" / ")"
+/// >               / "*" / "+" / "," / ";" / "="
+/// > ```
+const ASCII_SET: percent_encoding_rfc3986::AsciiSet = percent_encoding_rfc3986::NON_ALPHANUMERIC
+    // allow non-alphanumeric characters from `unreserved`
+    .remove(b'-')
+    .remove(b'.')
+    .remove(b'_')
+    .remove(b'~')
+    // allow non-alphanumeric characters from `sub-delims` excluding bip-21
+    // separators ("&", and "=")
+    .remove(b'!')
+    .remove(b'$')
+    .remove(b'\'')
+    .remove(b'(')
+    .remove(b')')
+    .remove(b'*')
+    .remove(b'+')
+    .remove(b',')
+    .remove(b';')
+    // allow pchar extra chars
+    .remove(b':')
+    .remove(b'@')
+    // allow query extra chars
+    .remove(b'/')
+    .remove(b'?');
 
 /// Percent-encodes writes.
 struct WriterEncoder<W: fmt::Write>(W);
