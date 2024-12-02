@@ -1,4 +1,4 @@
-//! Rust-idiomatic, compliant, flexible and performant BIP21 crate.
+//! Rust-idiomatic, compliant, flexible and performant bitcoin URI crate.
 //!
 //! **Important:** while lot of work went into polishing the crate it's still considered
 //! early-development!

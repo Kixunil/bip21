@@ -1,6 +1,6 @@
-# Rust implementation of BIP21
+# Rust implementation of BIP21 bitcoin URIs
 
-Rust-idiomatic, compliant, flexible and performant BIP21 crate.
+Rust-idiomatic, compliant, flexible and performant bitcoin URI crate.
 
 ## About
 

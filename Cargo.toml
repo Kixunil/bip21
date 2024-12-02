@@ -1,10 +1,10 @@
 [package]
-name = "bip21"
-version = "0.5.0"
-authors = ["Martin Habovstiak <martin.habovstiak@gmail.com>"]
+name = "bitcoin_uri"
+version = "0.0.1"
+authors = ["Dan Gould <d@ngould.dev>"]
 edition = "2018"
-description = "Rust-idiomatic, compliant, flexible and performant BIP21 crate."
-repository = "https://github.com/Kixunil/bip21"
+description = "Rust-idiomatic, compliant, flexible and performant bitcoin URI crate."
+repository = "https://github.com/payjoin/bitcoin_uri"
 readme = "README.md"
 keywords = ["bitcoin", "bip21", "parsing", "newtypes"]
 categories = ["cryptography::cryptocurrencies", "encoding", "rust-patterns", "value-formatting"]
