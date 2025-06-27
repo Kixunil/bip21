@@ -11,7 +11,6 @@ use alloc::borrow::Cow;
 use alloc::string::String;
 use core::convert::{TryFrom, TryInto};
 use bitcoin::amount::{Denomination, ParseAmountError};
-use bitcoin::address::ParseError as AddressError;
 use bitcoin::address::NetworkValidation;
 use core::fmt;
 use super::{Uri, Param};
@@ -227,7 +226,12 @@ pub struct UriError(UriErrorInner);
 enum UriErrorInner {
     TooShort,
     InvalidScheme,
-    Address(AddressError),
+    #[cfg(bitcoin_0_30)]
+    Address(bitcoin::address::Error),
+    #[cfg(any(bitcoin_0_31, bitcoin_0_32))]
+    Address(bitcoin::address::ParseError),
+    #[cfg(bitcoin_0_31)]
+    AddressNetwork(bitcoin::address::Error),
     Amount(ParseAmountError),
     UnknownRequiredParameter(String),
     PercentDecode {
@@ -237,8 +241,23 @@ enum UriErrorInner {
     MissingEquals(String),
 }
 
-impl From<AddressError> for UriErrorInner {
-    fn from(value: AddressError) -> Self {
+#[cfg(any(bitcoin_0_31, bitcoin_0_32))]
+impl From<bitcoin::address::ParseError> for UriErrorInner {
+    fn from(value: bitcoin::address::ParseError) -> Self {
+        UriErrorInner::Address(value)
+    }
+}
+
+#[cfg(bitcoin_0_31)]
+impl From<bitcoin::address::Error> for UriErrorInner {
+    fn from(value: bitcoin::address::Error) -> Self {
+        UriErrorInner::AddressNetwork(value)
+    }
+}
+
+#[cfg(bitcoin_0_30)]
+impl From<bitcoin::address::Error> for UriErrorInner {
+    fn from(value: bitcoin::address::Error) -> Self {
         UriErrorInner::Address(value)
     }
 }
@@ -255,6 +274,8 @@ impl fmt::Display for UriError {
             UriErrorInner::TooShort => write!(f, "the URI is too short"),
             UriErrorInner::InvalidScheme => write!(f, "the URI has invalid scheme"),
             UriErrorInner::Address(_) => write!(f, "the address is invalid"),
+            #[cfg(bitcoin_0_31)]
+            UriErrorInner::AddressNetwork(_) => write!(f, "the address is invalid for the desired network"),
             UriErrorInner::Amount(_) => write!(f, "the amount is invalid"),
             UriErrorInner::UnknownRequiredParameter(parameter) => write!(f, "the URI contains unknown required parameter '{}'", parameter),
             #[cfg(feature = "std")]
@@ -274,6 +295,8 @@ impl std::error::Error for UriError {
             UriErrorInner::TooShort => None,
             UriErrorInner::InvalidScheme => None,
             UriErrorInner::Address(error) => Some(error),
+            #[cfg(bitcoin_0_31)]
+            UriErrorInner::AddressNetwork(error) => Some(error),
             UriErrorInner::Amount(error) => Some(error),
             UriErrorInner::UnknownRequiredParameter(_) => None,
             UriErrorInner::PercentDecode { parameter: _, error } => Some(error),
