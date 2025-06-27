@@ -32,6 +32,26 @@ jobs:
       - uses: actions/checkout@v2
       - run: cargo check --all
 
+  compile-bitcoin-0-31:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Set up Rust
+        uses: hecrj/setup-rust-action@v1
+      - uses: actions/checkout@v2
+      - run: |
+          cargo update --package bitcoin --precise 0.31.0
+          cargo check --all
+
+  compile-bitcoin-0-30:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Set up Rust
+        uses: hecrj/setup-rust-action@v1
+      - uses: actions/checkout@v2
+      - run: |
+          cargo update --package bitcoin --precise 0.30.0
+          cargo check --all
+
   test:
     needs: [codestyle, lint, compile]
     strategy:
